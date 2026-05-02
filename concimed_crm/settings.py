@@ -95,7 +95,10 @@ if os.getenv("DB_ENGINE", "").lower() == "mysql":
             "PASSWORD": os.getenv("DB_PASSWORD"),
             "HOST": os.getenv("DB_HOST"),
             "PORT": os.getenv("DB_PORT", "3306"),
-            "OPTIONS": {"charset": "utf8mb4"},
+            "OPTIONS": {
+                "charset": "utf8mb4",
+                "connect_timeout": 15,
+            },
         }
     }
 else:
@@ -148,3 +151,21 @@ LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "login"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Na Vercel, logs vão para Runtime Logs (útil para diagnosticar 500 com DEBUG=False).
+if os.getenv("VERCEL"):
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "handlers": {
+            "console": {"class": "logging.StreamHandler"},
+        },
+        "root": {"handlers": ["console"], "level": "INFO"},
+        "loggers": {
+            "django.request": {
+                "handlers": ["console"],
+                "level": "ERROR",
+                "propagate": False,
+            },
+        },
+    }
