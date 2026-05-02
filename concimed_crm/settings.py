@@ -32,7 +32,11 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "change-me-in-env")
 DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() == "true"
 AUTH_ENABLED = os.getenv("AUTH_ENABLED", "False").lower() == "true"
 
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+# Vercel (e outros proxies) enviam Host=projeto.vercel.app; espaços na env quebram o match.
+_allowed_raw = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+ALLOWED_HOSTS = [h.strip() for h in _allowed_raw if h.strip()]
+if os.getenv("VERCEL") and ".vercel.app" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(".vercel.app")
 
 
 # Application definition
