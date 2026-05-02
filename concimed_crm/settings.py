@@ -83,6 +83,20 @@ TEMPLATES = [
 WSGI_APPLICATION = 'concimed_crm.wsgi.application'
 
 
+def _env_clean(key: str, default: str | None = None) -> str | None:
+    """Evita colar no painel valor tipo 'DB_HOST=1.2.3.4' ou várias linhas (ex.: Vercel)."""
+    v = os.getenv(key, default)
+    if v is None:
+        return None
+    v = v.strip()
+    prefix = f"{key}="
+    if v.startswith(prefix):
+        v = v[len(prefix) :].strip()
+    if "\n" in v:
+        v = v.split("\n", 1)[0].strip()
+    return v or None
+
+
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
@@ -90,11 +104,11 @@ if os.getenv("DB_ENGINE", "").lower() == "mysql":
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.mysql",
-            "NAME": os.getenv("DB_NAME"),
-            "USER": os.getenv("DB_USER"),
-            "PASSWORD": os.getenv("DB_PASSWORD"),
-            "HOST": os.getenv("DB_HOST"),
-            "PORT": os.getenv("DB_PORT", "3306"),
+            "NAME": _env_clean("DB_NAME"),
+            "USER": _env_clean("DB_USER"),
+            "PASSWORD": _env_clean("DB_PASSWORD"),
+            "HOST": _env_clean("DB_HOST"),
+            "PORT": _env_clean("DB_PORT") or "3306",
             "OPTIONS": {
                 "charset": "utf8mb4",
                 "connect_timeout": 15,
