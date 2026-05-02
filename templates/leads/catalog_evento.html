@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}CRUD Evento | CRM Concimed{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1>{{ page_title }}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Salvar evento</button>
+    </form>
+</section>
+
+<section class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Tipo</th>
+                <th>Cidade</th>
+                <th>Período</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in eventos %}
+                <tr>
+                    <td>{{ item.nome }}</td>
+                    <td>{{ item.get_tipo_display }}</td>
+                    <td>
+                        {% if item.cidade_local %}
+                            {{ item.cidade_local.nome }}/{{ item.estado_local.uf }}
+                        {% else %}
+                            {{ item.cidade }}/{{ item.estado }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.data_fim and item.data_fim > item.data_evento %}
+                            {{ item.data_evento|date:"d/m/Y" }} – {{ item.data_fim|date:"d/m/Y" }}
+                        {% else %}
+                            {{ item.data_evento|date:"d/m/Y" }}
+                        {% endif %}
+                    </td>
+                    <td class="table-actions">
+                        <a class="button-link" href="{% url 'catalog-evento-edit' item.id %}">Editar</a>
+                        {% if can_delete %}
+                            <form method="post" action="{% url 'catalog-evento-delete' item.id %}" class="inline-form">
+                                {% csrf_token %}
+                                <button type="submit">Excluir</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5">Sem registros.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

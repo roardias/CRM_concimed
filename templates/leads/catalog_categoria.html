@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}CRUD Categoria Profissional | CRM Concimed{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1>{{ page_title }}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Salvar categoria</button>
+    </form>
+</section>
+
+<section class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Ativo</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in categorias %}
+                <tr>
+                    <td>{{ item.nome }}</td>
+                    <td>{% if item.ativo %}Sim{% else %}Não{% endif %}</td>
+                    <td class="table-actions">
+                        <a class="button-link" href="{% url 'catalog-categoria-edit' item.id %}">Editar</a>
+                        {% if can_delete %}
+                            <form method="post" action="{% url 'catalog-categoria-delete' item.id %}" class="inline-form">
+                                {% csrf_token %}
+                                <button type="submit">Excluir</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="3">Sem registros.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

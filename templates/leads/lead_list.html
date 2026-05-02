@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load phone_extras %}
+
+{% block title %}Leads | CRM Concimed{% endblock %}
+
+{% block content %}
+<section class="card">
+    <div class="section-header">
+        <h1>Leads</h1>
+        <a class="button-link" href="{% url 'lead-create' %}">Novo lead</a>
+    </div>
+    <form method="get" class="filters-grid">
+        <input type="text" name="q" placeholder="Buscar por nome" value="{{ filtros.q }}">
+        <select name="status">
+            <option value="">Status (todos)</option>
+            {% for value, label in status_choices %}
+                <option value="{{ value }}" {% if filtros.status == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <select name="nivel">
+            <option value="">Interesse (todos)</option>
+            {% for value, label in nivel_choices %}
+                <option value="{{ value }}" {% if filtros.nivel == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <select name="evento_id">
+            <option value="">Evento (todos)</option>
+            {% for evento in eventos %}
+                <option value="{{ evento.evento_id }}" {% if filtros.evento_id == evento.evento_id|stringformat:"s" %}selected{% endif %}>
+                    {{ evento.evento__nome }}
+                </option>
+            {% endfor %}
+        </select>
+        <input type="number" name="colaborador_id" placeholder="Colaborador ID" value="{{ filtros.colaborador_id }}">
+        <input type="date" name="data_inicio" value="{{ filtros.data_inicio }}">
+        <input type="date" name="data_fim" value="{{ filtros.data_fim }}">
+        <select name="ordenacao">
+            <option value="-updated_at" {% if filtros.ordenacao == "-updated_at" %}selected{% endif %}>Atualizado (mais recente)</option>
+            <option value="updated_at" {% if filtros.ordenacao == "updated_at" %}selected{% endif %}>Atualizado (mais antigo)</option>
+            <option value="-data_captacao" {% if filtros.ordenacao == "-data_captacao" %}selected{% endif %}>Captacao (mais recente)</option>
+            <option value="data_captacao" {% if filtros.ordenacao == "data_captacao" %}selected{% endif %}>Captacao (mais antiga)</option>
+            <option value="-score" {% if filtros.ordenacao == "-score" %}selected{% endif %}>Score (maior)</option>
+            <option value="score" {% if filtros.ordenacao == "score" %}selected{% endif %}>Score (menor)</option>
+        </select>
+        <div class="filters-actions">
+            <button type="submit">Filtrar</button>
+            <a class="button-link" href="{% url 'lead-list' %}">Limpar</a>
+        </div>
+    </form>
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Telefone</th>
+                <th>Categoria</th>
+                <th>Especialidade</th>
+                <th>Fase</th>
+                <th>Evento</th>
+                <th>Status</th>
+                <th>Interesse</th>
+                <th>Colaborador ID</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lead in leads %}
+                <tr>
+                    <td>{{ lead.nome }}</td>
+                    <td>{{ lead.email|default:"-" }}</td>
+                    <td>{{ lead.telefone|telefone_br }}</td>
+                    <td>{{ lead.categoria_profissional.nome|default:"-" }}</td>
+                    <td>{{ lead.especialidade.nome|default:"-" }}</td>
+                    <td>{{ lead.fase_academica.nome|default:"-" }}</td>
+                    <td>
+                        {{ lead.evento.nome }}
+                        {% if lead.evento.data_fim and lead.evento.data_fim > lead.evento.data_evento %}
+                            <br><small class="text-muted">{{ lead.evento.data_evento|date:"d/m/Y" }} – {{ lead.evento.data_fim|date:"d/m/Y" }}</small>
+                        {% else %}
+                            <br><small class="text-muted">{{ lead.evento.data_evento|date:"d/m/Y" }}</small>
+                        {% endif %}
+                    </td>
+                    <td>{{ lead.get_status_display }}</td>
+                    <td>{{ lead.get_nivel_interesse_display }}</td>
+                    <td>{{ lead.colaborador_id|default:"—" }}</td>
+                    <td><a class="button-link" href="{% url 'lead-detail' lead.id %}">Detalhes</a></td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="11">Nenhum lead cadastrado.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

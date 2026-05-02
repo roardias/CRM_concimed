@@ -1,0 +1,37 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CRM Concimed{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+    <header class="topbar">
+        <div class="brand">
+            <img class="brand-logo" src="{% static 'img/logo-concimed.svg' %}" alt="Logo Concimed">
+            <div class="brand-text">
+                <strong>Concimed CRM</strong>
+                <span>Painel Comercial</span>
+            </div>
+        </div>
+        <nav>
+            <a href="{% url 'dashboard' %}">Dashboard</a>
+            <a href="{% url 'catalogos' %}">Cadastros</a>
+            <a href="{% url 'kanban-board' %}">Kanban</a>
+            <a href="{% url 'lead-list' %}">Leads</a>
+        </nav>
+    </header>
+    <main class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

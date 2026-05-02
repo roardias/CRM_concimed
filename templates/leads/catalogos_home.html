@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastros Base | CRM Concimed{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1>Cadastros Base</h1>
+    <p>Usuários com permissão podem manter os cadastros de apoio do CRM.</p>
+</section>
+
+<section class="grid">
+    <article class="card">
+        <h2>Categorias Profissionais</h2>
+        <p>Total: {{ total_categorias }}</p>
+        <a class="button-link" href="{% url 'catalog-categoria' %}">Gerenciar categorias</a>
+    </article>
+    <article class="card">
+        <h2>Especialidades</h2>
+        <p>Total: {{ total_especialidades }}</p>
+        <a class="button-link" href="{% url 'catalog-especialidade' %}">Gerenciar especialidades</a>
+    </article>
+    <article class="card">
+        <h2>Fases acadêmicas</h2>
+        <p>Total: {{ total_fases_academicas }}</p>
+        <a class="button-link" href="{% url 'catalog-fase-academica' %}">Gerenciar fases acadêmicas</a>
+    </article>
+    <article class="card">
+        <h2>Eventos</h2>
+        <p>Total: {{ total_eventos }}</p>
+        <a class="button-link" href="{% url 'catalog-evento' %}">Gerenciar eventos</a>
+    </article>
+</section>
+{% endblock %}

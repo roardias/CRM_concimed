@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}CRUD Especialidade | CRM Concimed{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1>{{ page_title }}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Salvar especialidade</button>
+    </form>
+</section>
+
+<section class="card">
+    <form method="get" class="filters-grid">
+        <div>
+            <label for="filtro-categoria-profissional">Categoria profissional</label>
+            <select name="categoria_profissional" id="filtro-categoria-profissional">
+                <option value="">Todas</option>
+                {% for c in categorias_filtro %}
+                    <option value="{{ c.id }}" {% if filtro_categoria_id == c.id|stringformat:"s" %}selected{% endif %}>{{ c.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filters-actions">
+            <button type="submit">Filtrar</button>
+            <a class="button-link" href="{% url 'catalog-especialidade' %}">Limpar</a>
+        </div>
+    </form>
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Categoria profissional</th>
+                <th>Ativo</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in especialidades %}
+                <tr>
+                    <td>{{ item.nome }}</td>
+                    <td>{{ item.categoria_profissional.nome|default:"-" }}</td>
+                    <td>{% if item.ativo %}Sim{% else %}Não{% endif %}</td>
+                    <td class="table-actions">
+                        <a class="button-link" href="{% url 'catalog-especialidade-edit' item.id %}">Editar</a>
+                        {% if can_delete %}
+                            <form method="post" action="{% url 'catalog-especialidade-delete' item.id %}" class="inline-form">
+                                {% csrf_token %}
+                                <button type="submit">Excluir</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="4">Sem registros.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

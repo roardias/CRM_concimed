@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+db.sqlite3
+.env
+
+# Dados de carga e scripts SQL locais (não essenciais para rodar o app)
+Carga_Leads/
+Codigos SQL/
+
+# Cursor / IDE
+.cursor/

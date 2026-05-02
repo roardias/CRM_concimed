@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Novo Usuário | CRM Concimed{% endblock %}
+
+{% block content %}
+<section class="card auth-card">
+    <h1>Novo usuario</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Criar usuario</button>
+    </form>
+</section>
+{% endblock %}

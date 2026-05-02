@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+
+{% block title %}Kanban de Leads | CRM Concimed{% endblock %}
+
+{% block content %}
+<header class="kanban-hero">
+    <h1 class="kanban-hero-title">Kanban de Leads</h1>
+    <p class="kanban-hero-sub">Acompanhe o funil de captação por evento, categoria e especialidade.</p>
+</header>
+<p class="kanban-hint kanban-hint--below">Arraste os cards entre etapas para registrar a transição. Clique no card para ver o resumo.</p>
+
+<form method="get" action="{% url 'kanban-board' %}" class="kanban-filters-shell" id="kanban-filters-form">
+    <div class="kanban-filters-card">
+        <div class="kanban-filters-r1">
+            <div class="kf-field kf-field--nome">
+                <label class="kanban-filters-label" for="kf-q">Nome</label>
+                <div class="kf-input-wrap">
+                    <span class="kf-input-icon" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.2-4.2"/></svg>
+                    </span>
+                    <input id="kf-q" class="kf-input kf-input--with-icon" type="search" name="q" placeholder="Buscar por nome…" value="{{ filtros.q }}" autocomplete="off">
+                </div>
+            </div>
+            <div class="kf-field">
+                <label class="kanban-filters-label" for="kf-cap-ini">Captação — início</label>
+                <div class="kf-input-wrap">
+                    <span class="kf-input-icon" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                    </span>
+                    <input id="kf-cap-ini" class="kf-input kf-input--with-icon kf-input--date" type="date" name="data_capt_inicio" value="{{ filtros.data_capt_inicio }}" title="Data inicial da captação">
+                </div>
+            </div>
+            <div class="kf-field">
+                <label class="kanban-filters-label" for="kf-cap-fim">Captação — fim</label>
+                <div class="kf-input-wrap">
+                    <span class="kf-input-icon" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                    </span>
+                    <input id="kf-cap-fim" class="kf-input kf-input--with-icon kf-input--date" type="date" name="data_capt_fim" value="{{ filtros.data_capt_fim }}" title="Data final da captação">
+                </div>
+            </div>
+
+            <div class="kanban-ms" data-kanban-ms data-ms-empty-label="Todos os eventos">
+                <span class="kanban-ms-heading">Evento</span>
+                <button type="button" class="kanban-ms-trigger" aria-expanded="false" aria-haspopup="listbox" id="kf-ms-evento-btn">
+                    <span class="kanban-ms-trigger-inner">
+                        <span class="kanban-ms-trigger-text">Todos os eventos</span>
+                        <span class="kanban-ms-funnel" aria-hidden="true">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 3H2l7 8v6l6 3v-9l7-8z"/></svg>
+                        </span>
+                    </span>
+                    <span class="kanban-ms-chevron" aria-hidden="true"></span>
+                </button>
+                <div class="kanban-ms-panel" id="kf-ms-evento-panel" hidden>
+                    <div class="kanban-ms-search-wrap">
+                        <span class="kanban-ms-search-icon" aria-hidden="true">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.2-4.2"/></svg>
+                        </span>
+                        <input type="search" class="kanban-ms-search" placeholder="Buscar evento…" autocomplete="off" aria-label="Buscar evento">
+                    </div>
+                    <div class="kanban-ms-toolbar">
+                        <button type="button" class="kanban-ms-toolbar-btn" data-ms-all>Selecionar todos</button>
+                        <button type="button" class="kanban-ms-toolbar-btn" data-ms-clear>Limpar</button>
+                    </div>
+                    <div class="kanban-ms-list" role="listbox">
+                        {% for ev in eventos_opts %}
+                            <label class="kanban-ms-item" data-search="{{ ev.nome }} {{ ev.data_evento|date:'d/m/Y' }}">
+                                <input type="checkbox" name="evento_id" value="{{ ev.id }}" {% if ev.id in filtros.evento_ids %}checked{% endif %}>
+                                <span class="kanban-ms-item-text">{{ ev.nome }}</span>
+                                <span class="kanban-ms-item-meta">{{ ev.data_evento|date:"d/m/Y" }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="kanban-ms" data-kanban-ms data-ms-empty-label="Todas">
+                <span class="kanban-ms-heading">Categoria</span>
+                <button type="button" class="kanban-ms-trigger" aria-expanded="false" aria-haspopup="listbox" id="kf-ms-cat-btn">
+                    <span class="kanban-ms-trigger-inner">
+                        <span class="kanban-ms-trigger-text">Todas</span>
+                        <span class="kanban-ms-funnel" aria-hidden="true">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 3H2l7 8v6l6 3v-9l7-8z"/></svg>
+                        </span>
+                    </span>
+                    <span class="kanban-ms-chevron" aria-hidden="true"></span>
+                </button>
+                <div class="kanban-ms-panel" id="kf-ms-cat-panel" hidden>
+                    <div class="kanban-ms-search-wrap">
+                        <span class="kanban-ms-search-icon" aria-hidden="true">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.2-4.2"/></svg>
+                        </span>
+                        <input type="search" class="kanban-ms-search" placeholder="Buscar categoria…" autocomplete="off" aria-label="Buscar categoria">
+                    </div>
+                    <div class="kanban-ms-toolbar">
+                        <button type="button" class="kanban-ms-toolbar-btn" data-ms-all>Selecionar todos</button>
+                        <button type="button" class="kanban-ms-toolbar-btn" data-ms-clear>Limpar</button>
+                    </div>
+                    <div class="kanban-ms-list" role="listbox">
+                        {% for cat in categorias_opts %}
+                            <label class="kanban-ms-item" data-search="{{ cat.nome }}">
+                                <input type="checkbox" name="categoria_profissional_id" value="{{ cat.id }}" {% if cat.id in filtros.categoria_ids %}checked{% endif %}>
+                                <span class="kanban-ms-item-text">{{ cat.nome }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="kanban-filters-r2">
+            <div class="kanban-ms kanban-ms--row2" data-kanban-ms data-ms-empty-label="Todas">
+                <span class="kanban-ms-heading">Especialidade</span>
+                <button type="button" class="kanban-ms-trigger" aria-expanded="false" aria-haspopup="listbox" id="kf-ms-esp-btn">
+                    <span class="kanban-ms-trigger-inner">
+                        <span class="kanban-ms-trigger-text">Todas</span>
+                        <span class="kanban-ms-funnel" aria-hidden="true">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 3H2l7 8v6l6 3v-9l7-8z"/></svg>
+                        </span>
+                    </span>
+                    <span class="kanban-ms-chevron" aria-hidden="true"></span>
+                </button>
+                <div class="kanban-ms-panel" id="kf-ms-esp-panel" hidden>
+                    <div class="kanban-ms-search-wrap">
+                        <span class="kanban-ms-search-icon" aria-hidden="true">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.2-4.2"/></svg>
+                        </span>
+                        <input type="search" class="kanban-ms-search" placeholder="Buscar especialidade…" autocomplete="off" aria-label="Buscar especialidade">
+                    </div>
+                    <div class="kanban-ms-toolbar">
+                        <button type="button" class="kanban-ms-toolbar-btn" data-ms-all>Selecionar todos</button>
+                        <button type="button" class="kanban-ms-toolbar-btn" data-ms-clear>Limpar</button>
+                    </div>
+                    <div class="kanban-ms-list" role="listbox">
+                        {% for esp in especialidades_opts %}
+                            <label class="kanban-ms-item" data-search="{{ esp.nome }}{% if esp.categoria_profissional %} {{ esp.categoria_profissional.nome }}{% endif %}">
+                                <input type="checkbox" name="especialidade_id" value="{{ esp.id }}" {% if esp.id in filtros.especialidade_ids %}checked{% endif %}>
+                                <span class="kanban-ms-item-text">{{ esp.nome }}</span>
+                                {% if esp.categoria_profissional %}<span class="kanban-ms-item-meta">{{ esp.categoria_profissional.nome }}</span>{% endif %}
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <p class="kanban-filters-summary" aria-live="polite">
+                <strong>{{ filtros_ativos_count }}</strong> filtro{% if filtros_ativos_count != 1 %}s{% endif %} ativo{% if filtros_ativos_count != 1 %}s{% endif %}
+                <span class="kanban-filters-summary-sep">/</span>
+                <strong>{{ total_leads_filtrados }}</strong> resultado{% if total_leads_filtrados != 1 %}s{% endif %}
+            </p>
+
+            <div class="kanban-filters-r2-actions">
+                <button type="submit" class="button-link kanban-filters-apply">Aplicar filtros</button>
+                <a class="kanban-filters-clear-link" href="{% url 'kanban-board' %}">
+                    <span class="kanban-filters-clear-x" aria-hidden="true">×</span>
+                    Limpar filtros
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+
+<section class="kanban-board-wrap">
+    <div
+        class="kanban-board"
+        id="kanban-board"
+        data-preview-template="{% url 'kanban-lead-preview' 888888888 %}"
+        data-transition-template="{% url 'move-lead-transition' 888888888 %}"
+    >
+        {% for column in kanban_data %}
+            <div class="kanban-column" data-status="{{ column.value }}">
+                <h2 class="kanban-column-title">{{ column.label }}</h2>
+                <div class="kanban-cards cards" data-drop-zone>
+                    {% for lead in column.leads %}
+                        <article
+                            class="kanban-card"
+                            draggable="true"
+                            data-lead-id="{{ lead.id }}"
+                            data-status="{{ column.value }}"
+                            data-colaborador-id="{{ lead.colaborador_id|default:'' }}"
+                            role="button"
+                            tabindex="0"
+                            aria-label="Lead {{ lead.nome }}, abrir detalhes"
+                        >
+                            <h3 class="kanban-card-name">{{ lead.nome }}</h3>
+                            <p class="kanban-card-line">{{ lead.email|default:"Sem e-mail" }}</p>
+                            <p class="kanban-card-line kanban-card-event">
+                                {{ lead.evento.nome }}
+                                {% if lead.evento.data_fim and lead.evento.data_fim > lead.evento.data_evento %}
+                                    <span class="kanban-card-dates">{{ lead.evento.data_evento|date:"d/m/Y" }} – {{ lead.evento.data_fim|date:"d/m/Y" }}</span>
+                                {% else %}
+                                    <span class="kanban-card-dates">{{ lead.evento.data_evento|date:"d/m/Y" }}</span>
+                                {% endif %}
+                            </p>
+                        </article>
+                    {% empty %}
+                        <p class="kanban-column-empty">Sem leads nesta etapa.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+<dialog id="kanban-lead-dialog" class="kanban-modal-dialog">
+    <div class="kanban-modal-header">
+        <button type="button" class="kanban-modal-close" id="kanban-modal-close-x" aria-label="Fechar">&times;</button>
+    </div>
+    <div class="kanban-modal-body" id="kanban-lead-dialog-body">
+        <p class="text-muted">Carregando…</p>
+    </div>
+</dialog>
+
+<dialog id="kanban-transition-dialog" class="kanban-modal-dialog kanban-transition-dialog">
+    <div class="kanban-modal-header">
+        <button type="button" class="kanban-modal-close" id="kanban-transition-close-x" aria-label="Fechar">&times;</button>
+    </div>
+    <form id="kanban-transition-form" class="kanban-transition-form">
+        {% csrf_token %}
+        <input type="hidden" name="etapa_anterior" id="tr-etapa-anterior" value="">
+        <input type="hidden" name="etapa_nova" id="tr-etapa-nova" value="">
+        <div class="kanban-modal-body">
+            <h2 id="tr-title" class="kanban-preview-title">Registrar transição</h2>
+            <p id="tr-error" class="kanban-tr-error" hidden></p>
+
+            <div class="kanban-tr-section tr-sec-always" id="tr-sec-always">
+                <p>
+                    <label for="tr-colaborador-id">Colaborador (ID) *</label>
+                    <input name="colaborador_id" id="tr-colaborador-id" type="number" required min="1" step="1" class="kanban-tr-input">
+                </p>
+            </div>
+
+            <div class="kanban-tr-section" id="tr-sec-novo-em_contato" hidden>
+                <p>
+                    <label for="tr-canal-1">Canal do contato *</label>
+                    <select name="canal" id="tr-canal-1" class="kanban-tr-input">
+                        <option value="">—</option>
+                        <option value="whatsapp">WhatsApp</option>
+                        <option value="telefone">Telefone</option>
+                        <option value="email">E-mail</option>
+                        <option value="presencial">Presencial</option>
+                        <option value="outro">Outro</option>
+                    </select>
+                </p>
+                <p>
+                    <label for="tr-data-contato">Data do contato *</label>
+                    <input name="data_contato" id="tr-data-contato" type="datetime-local" class="kanban-tr-input">
+                </p>
+                <p>
+                    <label for="tr-obs-1">O que foi conversado *</label>
+                    <textarea name="observacao" id="tr-obs-1" rows="3" class="kanban-tr-input"></textarea>
+                </p>
+                <p>
+                    <label for="tr-proximo-followup">Próximo follow-up *</label>
+                    <input name="proximo_followup" id="tr-proximo-followup" type="date" class="kanban-tr-input">
+                </p>
+            </div>
+
+            <div class="kanban-tr-section" id="tr-sec-em_contato-proposta" hidden>
+                <p>
+                    <label for="tr-respondeu">Lead respondeu ao contato? *</label>
+                    <select name="respondeu" id="tr-respondeu" class="kanban-tr-input">
+                        <option value="">—</option>
+                        <option value="true">Sim</option>
+                        <option value="false">Não</option>
+                    </select>
+                </p>
+                <p>
+                    <label for="tr-produto-apresentado">Produto/serviço apresentado *</label>
+                    <input name="produto_servico" id="tr-produto-apresentado" type="text" maxlength="255" class="kanban-tr-input">
+                </p>
+                <p>
+                    <label for="tr-canal-2">Canal de envio da proposta *</label>
+                    <select name="canal" id="tr-canal-2" class="kanban-tr-input">
+                        <option value="">—</option>
+                        <option value="whatsapp">WhatsApp</option>
+                        <option value="telefone">Telefone</option>
+                        <option value="email">E-mail</option>
+                        <option value="presencial">Presencial</option>
+                        <option value="outro">Outro</option>
+                    </select>
+                </p>
+                <p>
+                    <label for="tr-data-envio-proposta">Data de envio da proposta *</label>
+                    <input name="data_envio_proposta" id="tr-data-envio-proposta" type="date" class="kanban-tr-input">
+                </p>
+            </div>
+
+            <div class="kanban-tr-section" id="tr-sec-proposta-convertido" hidden>
+                <p>
+                    <label for="tr-data-conversao">Data da conversão *</label>
+                    <input name="data_conversao" id="tr-data-conversao" type="date" class="kanban-tr-input">
+                </p>
+                <p>
+                    <label for="tr-produto-contratado">Produto/serviço contratado *</label>
+                    <input name="produto_servico" id="tr-produto-contratado" type="text" maxlength="255" class="kanban-tr-input">
+                </p>
+                <p>
+                    <label for="tr-obs-final">Observações finais *</label>
+                    <textarea name="observacao" id="tr-obs-final" rows="3" class="kanban-tr-input"></textarea>
+                </p>
+            </div>
+
+            <div class="kanban-tr-section" id="tr-sec-perdido" hidden>
+                <p>
+                    <label for="tr-motivo-perda">Motivo da perda *</label>
+                    <select name="motivo_perda" id="tr-motivo-perda" class="kanban-tr-input">
+                        <option value="">—</option>
+                        <option value="sem_interesse">Sem interesse</option>
+                        <option value="sem_retorno">Sem retorno</option>
+                        <option value="escolheu_concorrente">Escolheu concorrente</option>
+                        <option value="momento_ruim">Momento ruim</option>
+                        <option value="outros">Outros</option>
+                    </select>
+                </p>
+                <p>
+                    <label for="tr-obs-perdido">Observação *</label>
+                    <textarea name="observacao" id="tr-obs-perdido" rows="3" class="kanban-tr-input"></textarea>
+                </p>
+            </div>
+        </div>
+        <div class="kanban-preview-actions kanban-transition-actions">
+            <button type="submit" class="button-link" id="tr-submit">Confirmar movimentação</button>
+            <button type="button" class="button-link" id="tr-cancel" style="background: var(--text-muted);">Cancelar</button>
+        </div>
+    </form>
+</dialog>
+{% endblock %}

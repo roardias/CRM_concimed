@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | CRM Concimed{% endblock %}
+
+{% block content %}
+<header class="dash-hero">
+    <h1 class="dash-hero-title">Dashboard</h1>
+    <p class="dash-hero-sub">Indicadores de captação e funil com base nos leads cadastrados.</p>
+</header>
+
+<section class="dash-kpi-row" aria-label="Indicadores principais">
+    <article class="dash-kpi-card">
+        <div class="dash-kpi-head">
+            <span class="dash-kpi-label">Total de leads</span>
+            <span class="dash-kpi-icon dash-kpi-icon--user" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </span>
+        </div>
+        <p class="dash-kpi-value">{{ kpi_leads_periodo }}</p>
+        <p class="dash-kpi-sub">Captados nos últimos 30 dias</p>
+        {% if kpi_trend_pct is not None %}
+            <p class="dash-kpi-trend {% if kpi_trend_pct >= 0 %}dash-kpi-trend--up{% else %}dash-kpi-trend--down{% endif %}">
+                {% if kpi_trend_pct >= 0 %}↗{% else %}↘{% endif %}
+                {% if kpi_trend_pct > 0 %}+{% endif %}{{ kpi_trend_pct }}% vs. período anterior
+            </p>
+        {% elif kpi_leads_periodo > 0 %}
+            <p class="dash-kpi-trend dash-kpi-trend--muted">Sem captação no período anterior para comparar</p>
+        {% else %}
+            <p class="dash-kpi-trend dash-kpi-trend--muted">Sem captação no período</p>
+        {% endif %}
+    </article>
+    <article class="dash-kpi-card">
+        <div class="dash-kpi-head">
+            <span class="dash-kpi-label">Convertidos</span>
+            <span class="dash-kpi-icon dash-kpi-icon--target" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            </span>
+        </div>
+        <p class="dash-kpi-value">{{ kpi_convertidos }}</p>
+        <p class="dash-kpi-sub">{{ kpi_conv_rate }}% de conversão (sobre captados em 30 dias)</p>
+    </article>
+    <article class="dash-kpi-card">
+        <div class="dash-kpi-head">
+            <span class="dash-kpi-label">Em qualificação</span>
+            <span class="dash-kpi-icon dash-kpi-icon--trend" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>
+            </span>
+        </div>
+        <p class="dash-kpi-value">{{ kpi_em_qualificacao }}</p>
+        <p class="dash-kpi-sub">Em contato + Proposta (situação atual)</p>
+    </article>
+    <article class="dash-kpi-card">
+        <div class="dash-kpi-head">
+            <span class="dash-kpi-label">Captação no mês</span>
+            <span class="dash-kpi-icon dash-kpi-icon--cal" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            </span>
+        </div>
+        <p class="dash-kpi-value">{{ kpi_captacao_mes }}</p>
+        <p class="dash-kpi-sub">Mês de {{ kpi_mes_nome }} {{ now_year }}</p>
+    </article>
+</section>
+
+<section class="dash-mid-grid">
+    <div class="dash-card dash-chart-card">
+        <h2 class="dash-card-title">Captação por mês</h2>
+        <p class="dash-card-sub">Total captado vs. convertidos (status atual)</p>
+        <div class="dash-chart-wrap">
+            <canvas id="dash-chart-linha" aria-label="Gráfico de captação por mês"></canvas>
+        </div>
+    </div>
+    <aside class="dash-card dash-funnel-card">
+        <h2 class="dash-card-title">Funil de conversão</h2>
+        <p class="dash-card-sub">% de avanço em relação à etapa anterior</p>
+        <ul class="dash-funnel-list">
+            {% for step in funnel_steps %}
+                <li class="dash-funnel-item">
+                    <div class="dash-funnel-row">
+                        <span class="dash-funnel-label">{{ step.label }} · {{ step.count }}</span>
+                        <span class="dash-funnel-pct">{{ step.pct_prev }}%</span>
+                    </div>
+                    <div class="dash-funnel-bar-track">
+                        <div class="dash-funnel-bar-fill" style="width: {{ step.pct_prev }}%; background: {{ step.color }};"></div>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+        <div class="dash-funnel-footer">
+            <span>Conversão geral</span>
+            <strong>{{ conversao_geral_pct }}%</strong>
+        </div>
+    </aside>
+</section>
+
+<section class="dash-bottom-grid">
+    <div class="dash-card dash-chart-wide">
+        <h2 class="dash-card-title">Captação por evento</h2>
+        <p class="dash-card-sub">Volume total e convertidos por evento</p>
+        <div class="dash-chart-wrap dash-chart-wrap--bars">
+            <canvas id="dash-chart-eventos" aria-label="Gráfico por evento"></canvas>
+            <p class="dash-chart-empty-msg" id="dash-chart-eventos-empty" hidden>Nenhum lead associado a eventos.</p>
+        </div>
+    </div>
+    <div class="dash-card">
+        <h2 class="dash-card-title">Por categoria</h2>
+        <p class="dash-card-sub">Distribuição profissional</p>
+        <div class="dash-chart-wrap dash-chart-wrap--categorias">
+            <canvas id="dash-chart-categorias" aria-label="Leads por categoria"></canvas>
+            <p class="dash-chart-empty-msg" id="dash-chart-categorias-empty" hidden>Nenhum lead cadastrado.</p>
+        </div>
+    </div>
+    <div class="dash-card">
+        <h2 class="dash-card-title">Top especialidades</h2>
+        <p class="dash-card-sub">Volume por área</p>
+        <ul class="dash-top-esp">
+            {% for esp in top_especialidades %}
+                <li class="dash-top-esp-item">
+                    <div class="dash-top-esp-row">
+                        <span>{{ esp.nome }}</span>
+                        <span class="dash-top-esp-n">{{ esp.count }}</span>
+                    </div>
+                    <div class="dash-top-esp-track">
+                        <div class="dash-top-esp-bar" style="width: {{ esp.pct }}%; background: {{ esp.color }};"></div>
+                    </div>
+                </li>
+            {% empty %}
+                <li class="dash-empty">Sem dados de especialidade nos leads.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+<section class="dash-card dash-snapshot">
+    <h2 class="dash-card-title">Snapshot por status</h2>
+    <p class="dash-card-sub">Quantidade atual em cada etapa (exceto perdidos)</p>
+    <div class="dash-snapshot-row">
+        {% for s in snapshot_status %}
+            <article class="dash-snapshot-card">
+                <div class="dash-snapshot-head">
+                    <span class="dash-snapshot-dot" style="background: {{ s.color }};"></span>
+                    <span class="dash-snapshot-name">{{ s.label }}</span>
+                </div>
+                <p class="dash-snapshot-value">{{ s.count }}</p>
+                <p class="dash-snapshot-pct">{{ s.pct_total }}% do total ativo</p>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="card">
+    <h2>Leads atualizados recentemente</h2>
+    <ul class="dash-recent-list">
+        {% for lead in latest_leads %}
+            <li>
+                <a href="{% url 'lead-detail' lead.id %}">{{ lead.nome }}</a>
+                — {{ lead.get_status_display }} · {{ lead.evento.nome }}
+            </li>
+        {% empty %}
+            <li>Nenhum lead cadastrado ainda.</li>
+        {% endfor %}
+    </ul>
+</section>
+
+{{ chart_line|json_script:"dash-data-linha" }}
+{{ chart_eventos|json_script:"dash-data-eventos" }}
+{{ chart_categorias|json_script:"dash-data-categorias" }}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+<script>
+(function () {
+    const font = { family: "'Segoe UI', Tahoma, Arial, sans-serif", size: 12 };
+    const gridColor = 'rgba(44, 24, 16, 0.08)';
+
+    const lineEl = document.getElementById('dash-chart-linha');
+    if (lineEl) {
+        const raw = JSON.parse(document.getElementById('dash-data-linha').textContent);
+        new Chart(lineEl, {
+            type: 'line',
+            data: {
+                labels: raw.labels,
+                datasets: [
+                    {
+                        label: 'Total',
+                        data: raw.totals,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.12)',
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 4,
+                    },
+                    {
+                        label: 'Convertidos',
+                        data: raw.convertidos,
+                        borderColor: '#16a34a',
+                        backgroundColor: 'rgba(22, 163, 74, 0.12)',
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 4,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'top', labels: { font } } },
+                scales: {
+                    x: { grid: { color: gridColor }, ticks: { font } },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: gridColor, borderDash: [4, 4] },
+                        ticks: { font, precision: 0 },
+                    },
+                },
+            },
+        });
+    }
+
+    const barEl = document.getElementById('dash-chart-eventos');
+    const barEmpty = document.getElementById('dash-chart-eventos-empty');
+    if (barEl) {
+        const raw = JSON.parse(document.getElementById('dash-data-eventos').textContent);
+        if (raw.labels && raw.labels.length) {
+            new Chart(barEl, {
+                type: 'bar',
+                data: {
+                    labels: raw.labels,
+                    datasets: [
+                        {
+                            label: 'Total',
+                            data: raw.totals,
+                            backgroundColor: 'rgba(37, 99, 235, 0.85)',
+                            borderRadius: 6,
+                        },
+                        {
+                            label: 'Convertidos',
+                            data: raw.convertidos,
+                            backgroundColor: 'rgba(22, 163, 74, 0.85)',
+                            borderRadius: 6,
+                        },
+                    ],
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top', labels: { font } } },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            stacked: false,
+                            grid: { color: gridColor, borderDash: [4, 4] },
+                            ticks: { font, precision: 0 },
+                        },
+                        y: { grid: { display: false }, ticks: { font } },
+                    },
+                },
+            });
+        } else if (barEmpty) {
+            barEl.hidden = true;
+            barEmpty.hidden = false;
+        }
+    }
+
+    const catColors = [
+        '#2563eb', '#16a34a', '#7c3aed', '#ea580c', '#dc2626',
+        '#0891b2', '#ca8a04', '#4f46e5', '#db2777', '#059669',
+        '#0d9488', '#c026d3', '#65a30d', '#e11d48',
+    ];
+
+    function dashHasCategoriaData(raw) {
+        if (!raw || !raw.labels || !raw.data) return false;
+        if (!raw.labels.length || raw.labels.length !== raw.data.length) return false;
+        for (var i = 0; i < raw.data.length; i++) {
+            if (Number(raw.data[i]) > 0) return true;
+        }
+        return false;
+    }
+
+    const catEl = document.getElementById('dash-chart-categorias');
+    const catEmpty = document.getElementById('dash-chart-categorias-empty');
+    if (catEl) {
+        const raw = JSON.parse(document.getElementById('dash-data-categorias').textContent);
+        if (dashHasCategoriaData(raw)) {
+            new Chart(catEl, {
+                type: 'bar',
+                data: {
+                    labels: raw.labels,
+                    datasets: [{
+                        label: 'Leads',
+                        data: raw.data,
+                        backgroundColor: raw.labels.map(function (_, i) {
+                            return catColors[i % catColors.length];
+                        }),
+                        borderRadius: 6,
+                    }],
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (ctx) {
+                                    var v = ctx.parsed.x;
+                                    return (ctx.label || '') + ': ' + v;
+                                },
+                            },
+                        },
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: { color: gridColor, borderDash: [4, 4] },
+                            ticks: { font, precision: 0 },
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: {
+                                font,
+                                autoSkip: false,
+                            },
+                        },
+                    },
+                },
+            });
+        } else {
+            catEl.hidden = true;
+            if (catEmpty) catEmpty.hidden = false;
+        }
+    }
+})();
+</script>
+{% endblock %}

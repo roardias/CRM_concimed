@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Entrar | CRM Concimed{% endblock %}
+
+{% block content %}
+<section class="card auth-card">
+    <h1>Acesse o CRM</h1>
+    <p>Use seu usuario e senha para entrar.</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Entrar</button>
+    </form>
+</section>
+{% endblock %}

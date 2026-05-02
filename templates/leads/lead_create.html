@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_edit %}Editar Lead{% else %}Novo Lead{% endif %} | CRM Concimed{% endblock %}
+
+{% block content %}
+<section class="card auth-card">
+    <h1>{% if is_edit %}Editar lead{% else %}Novo lead{% endif %}</h1>
+    <form method="post" id="lead-form" data-student-categories="{{ student_category_ids|join:',' }}">
+        {% csrf_token %}
+        {% for field in form %}
+            <p id="wrap-{{ field.name }}">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.errors %}
+                    <small>{{ field.errors|striptags }}</small>
+                {% endif %}
+            </p>
+        {% endfor %}
+        <button type="submit">{% if is_edit %}Salvar alterações{% else %}Salvar lead{% endif %}</button>
+        {% if is_edit %}
+            <p style="margin-top:1rem;"><a href="{% url 'kanban-board' %}">Voltar ao Kanban</a></p>
+        {% endif %}
+    </form>
+</section>
+{% endblock %}

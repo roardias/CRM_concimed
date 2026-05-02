@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load phone_extras %}
+
+{% block title %}Lead {{ lead.nome }} | CRM Concimed{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1>{{ lead.nome }}</h1>
+    <p>
+        <strong>Evento:</strong> {{ lead.evento.nome }}
+        {% if lead.evento.data_fim and lead.evento.data_fim > lead.evento.data_evento %}
+            <br><small>{{ lead.evento.data_evento|date:"d/m/Y" }} – {{ lead.evento.data_fim|date:"d/m/Y" }}</small>
+        {% else %}
+            <br><small>{{ lead.evento.data_evento|date:"d/m/Y" }}</small>
+        {% endif %}
+    </p>
+    <p><strong>Status:</strong> {{ lead.get_status_display }} | <strong>Interesse:</strong> {{ lead.get_nivel_interesse_display }}</p>
+    <p><strong>Data de captação:</strong> {% if lead.data_captacao %}{{ lead.data_captacao|date:"d/m/Y" }}{% else %}—{% endif %}</p>
+    <p><strong>E-mail:</strong> {{ lead.email|default:"-" }} | <strong>Telefone:</strong> {{ lead.telefone|telefone_br }}</p>
+    {% if lead.instagram or lead.linkedin or lead.tiktok or lead.youtube %}
+    <p><strong>Redes sociais:</strong>
+        {% if lead.instagram %}<br>Instagram: {{ lead.instagram }}{% endif %}
+        {% if lead.linkedin %}<br>LinkedIn: {{ lead.linkedin }}{% endif %}
+        {% if lead.tiktok %}<br>TikTok: {{ lead.tiktok }}{% endif %}
+        {% if lead.youtube %}<br>YouTube: {{ lead.youtube }}{% endif %}
+    </p>
+    {% endif %}
+    <p><strong>Categoria:</strong> {{ lead.categoria_profissional.nome|default:"-" }}</p>
+    <p><strong>Especialidade:</strong> {{ lead.especialidade.nome|default:"-" }}</p>
+    <p>
+        <strong>Localização:</strong>
+        {% if lead.cidade_local %}
+            {{ lead.cidade_local.nome }} / {{ lead.estado_local.uf|default:lead.estado|default:"-" }}
+        {% else %}
+            {{ lead.cidade|default:"-" }}{% if lead.estado %} / {{ lead.estado }}{% endif %}
+        {% endif %}
+    </p>
+    <p><strong>Fase acadêmica:</strong> {{ lead.fase_academica.nome|default:"-" }} | <strong>Internato implícito:</strong> {% if lead.internato_implicito %}Sim{% else %}Não{% endif %}</p>
+    <p><strong>Colaborador ID:</strong> {{ lead.colaborador_id|default:"— a definir" }}</p>
+    <p><strong>Observacoes:</strong> {{ lead.observacoes|default:"-" }}</p>
+</section>
+
+<section class="grid lead-detail-grid">
+    <article class="card">
+        <h2>Novo contato</h2>
+        <form method="post" action="{% url 'contato-create' lead.id %}">
+            {% csrf_token %}
+            {{ contato_form.as_p }}
+            <button type="submit">Registrar contato</button>
+        </form>
+    </article>
+
+    <article class="card">
+        <h2>Timeline de contatos</h2>
+        <ul class="timeline">
+            {% for contato in contatos %}
+                <li>
+                    <strong>{{ contato.data_contato|date:"d/m/Y H:i" }} - {{ contato.get_canal_display }}</strong><br>
+                    {{ contato.descricao }}<br>
+                    <small>Colaborador ID: {{ contato.colaborador_id }} | Respondeu: {% if contato.respondeu %}Sim{% else %}Não{% endif %}</small>
+                </li>
+            {% empty %}
+                <li>Nenhum contato registrado ainda.</li>
+            {% endfor %}
+        </ul>
+    </article>
+</section>
+{% endblock %}

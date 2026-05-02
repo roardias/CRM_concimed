@@ -1,0 +1,58 @@
+{% load phone_extras %}
+<div class="kanban-preview-inner">
+    <h2 class="kanban-preview-title">{{ lead.nome }}</h2>
+    <dl class="kanban-preview-dl">
+        <dt>Evento</dt>
+        <dd>
+            {{ lead.evento.nome }}
+            {% if lead.evento.data_fim and lead.evento.data_fim > lead.evento.data_evento %}
+                <br><small>{{ lead.evento.data_evento|date:"d/m/Y" }} – {{ lead.evento.data_fim|date:"d/m/Y" }}</small>
+            {% else %}
+                <br><small>{{ lead.evento.data_evento|date:"d/m/Y" }}</small>
+            {% endif %}
+        </dd>
+        <dt>Status</dt>
+        <dd>{{ lead.get_status_display }}</dd>
+        <dt>Data de captação</dt>
+        <dd>{% if lead.data_captacao %}{{ lead.data_captacao|date:"d/m/Y" }}{% else %}—{% endif %}</dd>
+        <dt>Interesse</dt>
+        <dd>{{ lead.get_nivel_interesse_display }}</dd>
+        <dt>E-mail</dt>
+        <dd>{{ lead.email|default:"—" }}</dd>
+        <dt>Telefone</dt>
+        <dd>{{ lead.telefone|telefone_br }}</dd>
+        {% if lead.instagram or lead.linkedin or lead.tiktok or lead.youtube %}
+        <dt>Redes sociais</dt>
+        <dd>
+            {% if lead.instagram %}Instagram: {{ lead.instagram }}<br>{% endif %}
+            {% if lead.linkedin %}LinkedIn: {{ lead.linkedin }}<br>{% endif %}
+            {% if lead.tiktok %}TikTok: {{ lead.tiktok }}<br>{% endif %}
+            {% if lead.youtube %}YouTube: {{ lead.youtube }}{% endif %}
+        </dd>
+        {% endif %}
+        <dt>Categoria</dt>
+        <dd>{{ lead.categoria_profissional.nome|default:"—" }}</dd>
+        <dt>Especialidade</dt>
+        <dd>{{ lead.especialidade.nome|default:"—" }}</dd>
+        <dt>Localização</dt>
+        <dd>
+            {% if lead.cidade_local %}
+                {{ lead.cidade_local.nome }} / {{ lead.estado_local.uf|default:lead.estado|default:"—" }}
+            {% else %}
+                {{ lead.cidade|default:"—" }}{% if lead.estado %} / {{ lead.estado }}{% endif %}
+            {% endif %}
+        </dd>
+        <dt>Fase acadêmica</dt>
+        <dd>{{ lead.fase_academica.nome|default:"—" }}</dd>
+        <dt>Internato implícito</dt>
+        <dd>{% if lead.internato_implicito %}Sim{% else %}Não{% endif %}</dd>
+        <dt>Colaborador ID</dt>
+        <dd>{{ lead.colaborador_id|default:"—" }}</dd>
+        <dt>Observações</dt>
+        <dd>{{ lead.observacoes|default:"—" }}</dd>
+    </dl>
+    <p class="kanban-preview-actions">
+        <a href="{% url 'lead-update' lead.id %}" class="button-link">Editar lead</a>
+        <button type="button" class="button-link kanban-preview-close" data-kanban-close style="background: var(--text-muted);">Fechar</button>
+    </p>
+</div>

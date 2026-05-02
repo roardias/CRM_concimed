@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | CRM Concimed{% endblock %}
+
+{% block content %}
+<section class="card auth-card">
+    <h1>{{ title }}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="form-non-field-errors" role="alert">
+                {% for err in form.non_field_errors %}<p>{{ err }}</p>{% endfor %}
+            </div>
+        {% endif %}
+        {% for field in form %}
+            {% if field.name == "ativo" %}
+                <div class="field-toggle">
+                    <span>{{ field.label }}:</span>
+                    <label class="switch">
+                        {{ field }}
+                        <span class="slider"></span>
+                        <span class="switch-text" data-on="ON" data-off="OFF"></span>
+                    </label>
+                </div>
+            {% else %}
+                <p>
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.errors %}
+                        <small>{{ field.errors|striptags }}</small>
+                    {% endif %}
+                </p>
+            {% endif %}
+        {% endfor %}
+        <button type="submit">Salvar</button>
+    </form>
+</section>
+{% endblock %}
