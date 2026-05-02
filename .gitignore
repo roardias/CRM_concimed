@@ -2,6 +2,7 @@
 __pycache__/
 *.pyc
 db.sqlite3
+staticfiles/
 .env
 
 # Dados de carga e scripts SQL locais (não essenciais para rodar o app)
